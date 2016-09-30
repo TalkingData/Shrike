@@ -337,7 +337,8 @@ SHIPYARD_DOCKER=tcp://192.168.0.1:4000 #其中一台swarm-manager的地址
 systemctl start shipyard
 ```
 
-打开浏览器访问http://192.168.0.1:8080,输入用户名：admin, 密码：shipyard 
+打开浏览器访问http://192.168.0.1:8080
+输入用户名：admin, 密码：shipyard 
 
 
 
