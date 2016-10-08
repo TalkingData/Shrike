@@ -24,6 +24,7 @@ func createBridge(ip, subnet, gateway string) error {
 	return err
 }
 
+//DefaultGatewayIPv4 is the ip of br0
 func create_network(ip, subnet, gateway string) error {
 	command := "docker"
 	args := fmt.Sprint("network create ",
@@ -50,6 +51,7 @@ func create_network(ip, subnet, gateway string) error {
 	return nil
 }
 
+//use network-scripts to implement bridge
 func configure_network(ip, subnet, gateway string) error {
 	bridge_command := "BRIDGE=br0"
 	_, interface_name, _ := get_network_information()
@@ -120,6 +122,7 @@ func restart_network() error {
 	return nil
 }
 
+//get default network interface info
 func get_network_information() (gateway, interface_name, local_ip string) {
 	command := "ip"
 	args := fmt.Sprint("route get ", "8.8.8.8")

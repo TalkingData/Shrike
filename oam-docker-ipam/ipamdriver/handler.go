@@ -16,7 +16,6 @@ type MyIPAMHandler struct {
 
 func (iph *MyIPAMHandler) GetCapabilities() (response *ipam.CapabilitiesResponse, err error) {
 	log.Infof("GetCapabilities")
-
 	return &ipam.CapabilitiesResponse{RequiresMACAddress: true}, nil
 }
 
