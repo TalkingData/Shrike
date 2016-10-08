@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"oam-docker-ipam/db"
 	"oam-docker-ipam/util"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -103,12 +102,10 @@ func ReleaseHost(ip string) error {
 	err := db.DeleteKey(filepath.Join(network_key_prefix, "assigned", ip))
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	err = db.SetKey(filepath.Join(network_key_prefix, "pool", ip), "")
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	log.Infof("Release host %s", ip)
 	return err
@@ -121,23 +118,18 @@ func CreateNetwork(ip string) {
 
 	if config, err = getConfig(); err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	if assigned_ip, err = getHost(ip); err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	if err = allocateHost(assigned_ip); err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	if err = createBridge(assigned_ip, config.Subnet, config.Gateway); err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	if err = restart_network(); err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	log.Infof("Create network %s done", assigned_ip)
 }
