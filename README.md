@@ -352,3 +352,8 @@ systemctl start shipyard
 [https://github.com/docker/libnetwork/blob/master/docs/ipam.md](https://github.com/docker/libnetwork/blob/master/docs/ipam.md)
 
 [https://github.com/docker/go-plugins-helpers](https://github.com/docker/go-plugins-helpers)
+
+
+### 作者
+邮箱：machaojms@126.com
+QQ/Wechat: 369101940
