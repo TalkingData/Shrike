@@ -1,6 +1,6 @@
 # Shrike
 
-
+![Shrike Logo](logo.jpg?raw=true "Shrike Logo")
 
 
 
