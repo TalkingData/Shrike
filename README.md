@@ -3,7 +3,6 @@
 ![Shrike Logo](logo.jpg?raw=true "Shrike Logo")
 
 
-
 ### 开发背景
 
 众所周知，Docker容器跨主机互访一直是一个问题，Docker官方为了避免网络上带来的诸多麻烦，故将跨主机网络开了比较大的口子，而由用户自己去实现。
@@ -12,48 +11,7 @@
 
 
 
-
-
-### 插件原理
-
-
-
-##### 创建Docker自定义网络
-
-我们首先需要创建一个br0自定义网桥，这个网桥并不是通过系统命令手动建立的原始Linux网桥，而是通过Docker的create network命令来建立的自定义网桥，这样避免了一个很重要的问题就是我们可以通过设置DefaultGatewayIPv4参数来设置容器的默认路由，这个解决了原始Linux自建网桥不能解决的问题. 用Docker创建网络时我们可以通过设置subnet参数来设置子网IP范围，默认我们可以把整个网段给这个子网，后面可以用ipam driver（地址管理插件）来进行控制。还有一个参数gateway是用来设置br0自定义网桥地址的，其实也就是你这台宿主机的地址啦。
-
-```shell
-docker network create 
---opt=com.docker.network.bridge.enable_icc=true
---opt=com.docker.network.bridge.enable_ip_masquerade=false
---opt=com.docker.network.bridge.host_binding_ipv4=0.0.0.0
---opt=com.docker.network.bridge.name=br0
---opt=com.docker.network.driver.mtu=1500
---ipam-driver=talkingdata
---subnet=容器IP的子网范围，
---gateway=br0网桥使用的IP,也就是宿主机的地址，
---aux-address=DefaultGatewayIPv4=容器使用的网关地址
-mynet
-```
-
-
-
-##### IPAM
-
-这个驱动是专门管理Docker 容器IP的, Docker 每次启停与删除容器都会调用这个驱动提供的IP管理接口，然后IP接口会对存储IP地址的Etcd有一个增删改查的操作。此插件运行时会起一个Unix Socket, 然后会在docker/run/plugins 目录下生成一个.sock文件，Docker daemon之后会和这个sock 文件进行沟通去调用我们之前实现好的几个接口进行IP管理，以此来达到IP管理的目的，防止IP冲突。
-
-
-
-##### 桥接
-
-通过Docker命令去创建一个自定义的网络起名为“mynet”，同时会产生一个网桥br0，之后通过更改网络配置文件（在/etc/sysconfig/network-scripts/下ifcfg-br0、ifcfg-默认网络接口名）将默认网络接口桥接到br0上，重启网络后，桥接网络就会生效。Docker默认在每次启动容器时都会将容器内的默认网卡桥接到br0上，而且宿主机的物理网卡也同样桥接到了br0上了。其实桥接的原理就好像是一台交换机，Docker 容器和宿主机物理网络接口都是服务器，通过veth pair这个网络设备像一根网线插到交换机上。至此，所有的容器网络已经在同一个网络上可以通信了，每一个Docker容器就好比是一台独立的虚拟机，拥有和宿主机同一网段的IP，可以实现跨主机访问了。
-
-
-
-
-
-### 安装部署
-
+### 安装部署范例
 
 
 假设我们有6台物理机想要部署docker集群，这里为了方便举例，我们少选一些主机。
@@ -259,13 +217,11 @@ systemctl start oam-docker-ipam
 /usr/bin/oam-docker-ipam --debug=true --cluster-store=http://192.168.0.1:2379,http://192.168.0.2:2379,http://192.168.0.3:2379 server
 ```
 
-创建自定义网络br0
+在计算主机节点上创建自定义网络br0 
 
 ```
 oam-docker-ipam --cluster-store=http://192.168.0.1:2379,http://192.168.0.2:2379,http://192.168.0.3:2379 create-network --ip 192.168.0.4
 ```
-
-
 
 ##### Swarm-Agent
 
@@ -339,6 +295,40 @@ systemctl start shipyard
 
 打开浏览器访问http://192.168.0.1:8080
 输入用户名：admin, 密码：shipyard 
+
+
+
+### 插件实现关键原理
+
+##### 创建Docker自定义网络
+
+我们首先需要创建一个br0自定义网桥，这个网桥并不是通过系统命令手动建立的原始Linux网桥，而是通过Docker的create network命令来建立的自定义网桥，这样避免了一个很重要的问题就是我们可以通过设置DefaultGatewayIPv4参数来设置容器的默认路由，这个解决了原始Linux自建网桥不能解决的问题. 用Docker创建网络时我们可以通过设置subnet参数来设置子网IP范围，默认我们可以把整个网段给这个子网，后面可以用ipam driver（地址管理插件）来进行控制。还有一个参数gateway是用来设置br0自定义网桥地址的，其实也就是你这台宿主机的地址啦。
+
+```shell
+docker network create 
+--opt=com.docker.network.bridge.enable_icc=true
+--opt=com.docker.network.bridge.enable_ip_masquerade=false
+--opt=com.docker.network.bridge.host_binding_ipv4=0.0.0.0
+--opt=com.docker.network.bridge.name=br0
+--opt=com.docker.network.driver.mtu=1500
+--ipam-driver=talkingdata
+--subnet=容器IP的子网范围，
+--gateway=br0网桥使用的IP,也就是宿主机的地址，
+--aux-address=DefaultGatewayIPv4=容器使用的网关地址
+mynet
+```
+
+
+
+##### IPAM
+
+这个驱动是专门管理Docker 容器IP的, Docker 每次启停与删除容器都会调用这个驱动提供的IP管理接口，然后IP接口会对存储IP地址的Etcd有一个增删改查的操作。此插件运行时会起一个Unix Socket, 然后会在docker/run/plugins 目录下生成一个.sock文件，Docker daemon之后会和这个sock 文件进行沟通去调用我们之前实现好的几个接口进行IP管理，以此来达到IP管理的目的，防止IP冲突。
+
+
+
+##### 桥接
+
+通过Docker命令去创建一个自定义的网络起名为“mynet”，同时会产生一个网桥br0，之后通过更改网络配置文件（在/etc/sysconfig/network-scripts/下ifcfg-br0、ifcfg-默认网络接口名）将默认网络接口桥接到br0上，重启网络后，桥接网络就会生效。Docker默认在每次启动容器时都会将容器内的默认网卡桥接到br0上，而且宿主机的物理网卡也同样桥接到了br0上了。其实桥接的原理就好像是一台交换机，Docker 容器和宿主机物理网络接口都是服务器，通过veth pair这个网络设备像一根网线插到交换机上。至此，所有的容器网络已经在同一个网络上可以通信了，每一个Docker容器就好比是一台独立的虚拟机，拥有和宿主机同一网段的IP，可以实现跨主机访问了。
 
 
 
