@@ -303,6 +303,7 @@ systemctl start shipyard
 ##### 创建Docker自定义网络
 
 我们首先需要创建一个br0自定义网桥，这个网桥并不是通过系统命令手动建立的原始Linux网桥，而是通过Docker的create network命令来建立的自定义网桥，这样避免了一个很重要的问题就是我们可以通过设置DefaultGatewayIPv4参数来设置容器的默认路由，这个解决了原始Linux自建网桥不能解决的问题. 用Docker创建网络时我们可以通过设置subnet参数来设置子网IP范围，默认我们可以把整个网段给这个子网，后面可以用ipam driver（地址管理插件）来进行控制。还有一个参数gateway是用来设置br0自定义网桥地址的，其实也就是你这台宿主机的地址啦。
+下面是一段核心代码:
 
 ```shell
 docker network create 
@@ -312,9 +313,9 @@ docker network create
 --opt=com.docker.network.bridge.name=br0
 --opt=com.docker.network.driver.mtu=1500
 --ipam-driver=talkingdata
---subnet=容器IP的子网范围，
---gateway=br0网桥使用的IP,也就是宿主机的地址，
---aux-address=DefaultGatewayIPv4=容器使用的网关地址
+--subnet=容器IP的子网范围，例:192.168.0.0/24
+--gateway=br0网桥使用的IP,也就是宿主机的地址，例:192.168.0.1
+--aux-address=DefaultGatewayIPv4=容器使用的网关地址 例:192.168.223.2
 mynet
 ```
 
@@ -344,6 +345,6 @@ mynet
 [https://github.com/docker/go-plugins-helpers](https://github.com/docker/go-plugins-helpers)
 
 
-### 作者
-邮箱：machaojms@126.com
-QQ/Wechat: 369101940
+### 交流群
+添加微信然后拉入微信群
+Wechat: 369101940 
